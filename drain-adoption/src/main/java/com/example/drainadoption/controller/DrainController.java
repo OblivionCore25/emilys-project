@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.example.drainadoption.exception.DrainNotFoundException;
+import com.example.drainadoption.exception.AdoptionConflictException;
 import com.example.drainadoption.model.Drain;
 import com.example.drainadoption.model.User;
 import com.example.drainadoption.repository.DrainRepository;
@@ -36,37 +38,29 @@ public class DrainController {
     public ResponseEntity<DrainDTO> getDrain(@PathVariable Long id) {
         return drainRepository.findById(id)
                 .map(drain -> ResponseEntity.ok(DrainDTO.fromEntity(drain)))
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new DrainNotFoundException(id));
     }
 
     @PostMapping("/{id}/adopt")
     public ResponseEntity<?> adoptDrain(@PathVariable Long id, @RequestParam Long userId) {
         // 1. Find user by userId
         User user = userRepository.findById(userId)
-                .orElseGet(() -> null);
-        if (user == null) {
-            return ResponseEntity.badRequest()
-                    .body("User not found with ID: " + userId);
-        }
+                .orElseThrow(() -> new AdoptionConflictException("User not found with ID: " + userId));
 
         // 2. Check if user already adopted a different drain
         if (user.getAdoptedDrain() != null) {
-            return ResponseEntity.badRequest()
-                    .body("User has already adopted drain with ID: " + user.getAdoptedDrain().getId());
+            throw new AdoptionConflictException("User has already adopted drain with ID: " + 
+                user.getAdoptedDrain().getId());
         }
 
         // 3. Find the drain by id
         Drain drain = drainRepository.findById(id)
-                .orElseGet(() -> null);
-        if (drain == null) {
-            return ResponseEntity.badRequest()
-                    .body("Drain not found with ID: " + id);
-        }
+                .orElseThrow(() -> new DrainNotFoundException(id));
 
         // 4. Check if drain already adopted by someone else
         if (drain.getAdoptedByUser() != null) {
-            return ResponseEntity.badRequest()
-                    .body("Drain is already adopted by user with ID: " + drain.getAdoptedByUser().getId());
+            throw new AdoptionConflictException("Drain is already adopted by user with ID: " + 
+                drain.getAdoptedByUser().getId());
         }
 
         // 5. Set relationships both ways
@@ -78,7 +72,7 @@ public class DrainController {
         drainRepository.save(drain);
 
         return ResponseEntity.ok()
-                .body("Drain " + id + " successfully adopted by user " + userId);
+                .body(DrainDTO.fromEntity(drain));
     }
 
     @PutMapping("/{id}")
