@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/drains")
-@CrossOrigin(origins = "http://localhost:5173")
 public class DrainController {
 
     @Autowired
@@ -39,6 +38,27 @@ public class DrainController {
         return drainRepository.findById(id)
                 .map(drain -> ResponseEntity.ok(DrainDTO.fromEntity(drain)))
                 .orElseThrow(() -> new DrainNotFoundException(id));
+    }
+
+    @PostMapping
+    public ResponseEntity<DrainDTO> createDrain(@RequestBody DrainDTO drainDTO) {
+        Drain drain = new Drain();
+        drain.setName(drainDTO.getName());
+        drain.setImageUrl(drainDTO.getImageUrl());
+        drain.setLatitude(drainDTO.getLatitude());
+        drain.setLongitude(drainDTO.getLongitude());
+        
+        Drain savedDrain = drainRepository.save(drain);
+        return ResponseEntity.status(HttpStatus.CREATED).body(DrainDTO.fromEntity(savedDrain));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteDrain(@PathVariable Long id) {
+        if (!drainRepository.existsById(id)) {
+            throw new DrainNotFoundException(id);
+        }
+        drainRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/adopt")
@@ -76,30 +96,25 @@ public class DrainController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateDrain(
+    public ResponseEntity<DrainDTO> updateDrain(
             @PathVariable Long id,
-            @RequestParam Long userId,
             @RequestBody DrainUpdateDTO updateDTO) {
         
         Drain drain = drainRepository.findById(id)
-                .orElse(null);
+                .orElseThrow(() -> new DrainNotFoundException(id));
 
-        if (drain == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // Check if the drain is adopted by the requesting user
-        if (drain.getAdoptedByUser() == null || 
-            !drain.getAdoptedByUser().getId().equals(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("You can only update drains you have adopted");
-        }
-
+        // Update drain fields
         if (updateDTO.getName() != null) {
             drain.setName(updateDTO.getName());
         }
         if (updateDTO.getImageUrl() != null) {
             drain.setImageUrl(updateDTO.getImageUrl());
+        }
+        if (updateDTO.getLatitude() != null) {
+            drain.setLatitude(updateDTO.getLatitude());
+        }
+        if (updateDTO.getLongitude() != null) {
+            drain.setLongitude(updateDTO.getLongitude());
         }
 
         Drain updatedDrain = drainRepository.save(drain);

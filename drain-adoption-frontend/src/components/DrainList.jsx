@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const DrainList = () => {
   const [drains, setDrains] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { isAdmin, getToken } = useAuth();
 
   useEffect(() => {
     fetchDrains();
@@ -25,12 +28,44 @@ const DrainList = () => {
     }
   };
 
+  const handleDelete = async (drainId, drainName) => {
+    if (!window.confirm(`Are you sure you want to delete "${drainName}"?`)) {
+      return;
+    }
+
+    try {
+      const token = getToken();
+      const response = await fetch(`http://localhost:8080/api/drains/${drainId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete drain');
+      }
+
+      toast.success('Drain deleted successfully');
+      fetchDrains(); // Refresh the list
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   if (loading) return <div>Loading drains...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="drain-list">
-      <h2>Available Drains</h2>
+      <div className="drain-list-header">
+        <h2>Available Drains</h2>
+        {isAdmin() && (
+          <Link to="/drains/new" className="create-button">
+            + Create New Drain
+          </Link>
+        )}
+      </div>
       <div className="drain-grid">
         {drains.map(drain => (
           <div key={drain.id} className="drain-card">
@@ -43,9 +78,24 @@ const DrainList = () => {
             <p>
               Status: {drain.adoptedByUserId ? 'Adopted' : 'Available'}
             </p>
-            <Link to={`/drains/${drain.id}`} className="view-button">
-              View Details
-            </Link>
+            <div className="card-actions">
+              <Link to={`/drains/${drain.id}`} className="view-button">
+                View Details
+              </Link>
+              {isAdmin() && (
+                <>
+                  <Link to={`/drains/${drain.id}/edit`} className="edit-button">
+                    Edit
+                  </Link>
+                  <button 
+                    onClick={() => handleDelete(drain.id, drain.name)}
+                    className="delete-button"
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ))}
       </div>

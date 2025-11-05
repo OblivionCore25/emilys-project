@@ -1,11 +1,6 @@
 package com.example.drainadoption.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -21,6 +16,21 @@ public class User {
     
     private String name;
     
+    @Column(unique = true, nullable = false)
+    private String email;
+    
+    @Column(nullable = false)
+    private String password;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role;
+    
     @OneToOne(mappedBy = "adoptedByUser")
     private Drain adoptedDrain;
+    
+    public enum UserRole {
+        ADMIN,
+        ADOPTER
+    }
 }

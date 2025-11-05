@@ -5,9 +5,9 @@ services:
     image: postgres:15
     container_name: drain-adoption-db
     environment:
-      POSTGRES_DB: drainapp
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_DB: postgres
+      POSTGRES_USER: d89f58ed35d3554fe790bc1567f53be8f738a644ee4fb53f2084d62d4a3c3bf9
+      POSTGRES_PASSWORD: sk_VwPgPKp1PF_Yh4adW48H8
     ports:
       - "5432:5432"
     volumes:

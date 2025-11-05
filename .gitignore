@@ -27,8 +27,12 @@ buildNumber.properties
 
 # Spring Boot
 spring-boot-starter/
+**/application.properties
 **/application-*.properties
-!**/application.properties
+
+# Database credentials and secrets
+**/src/main/resources/application.properties
+**/src/main/resources/application-*.properties
 
 # IntelliJ IDEA
 .idea/
@@ -62,7 +66,24 @@ lerna-debug.log*
 *.sln
 *.sw?
 
-# Environment files
+# Environment files and secrets
 .env
 .env.*
 !.env.example
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# API Keys and secrets
+**/secrets/
+**/secrets.json
+**/credentials.json
+**/*secret*
+**/*key*.json
+!**/package-lock.json
+!**/yarn.lock
+
+# Cloudinary and API configurations
+cloudinary-config.json

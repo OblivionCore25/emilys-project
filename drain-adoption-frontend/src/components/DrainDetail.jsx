@@ -1,25 +1,19 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { toast, ToastContainer } from 'react-toastify';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
+import LocationViewer from './LocationViewer';
 import 'react-toastify/dist/ReactToastify.css';
 
 const DrainDetail = () => {
   const [drain, setDrain] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', imageUrl: '' });
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  // In a real app, this would come from authentication
-  const currentUserId = 1;
+  const { user, getToken, isAdmin } = useAuth();
 
-  useEffect(() => {
-    fetchDrainDetails();
-  }, [id]);
-
-  const fetchDrainDetails = async () => {
+  const fetchDrainDetails = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:8080/api/drains/${id}`);
       if (!response.ok) {
@@ -32,12 +26,26 @@ const DrainDetail = () => {
       setError(err.message);
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchDrainDetails();
+  }, [fetchDrainDetails]);
 
   const adoptDrain = async () => {
+    if (!user) {
+      toast.error('Please login to adopt a drain');
+      navigate('/login');
+      return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:8080/api/drains/${id}/adopt?userId=${currentUserId}`, {
+      const token = getToken();
+      const response = await fetch(`http://localhost:8080/api/drains/${id}/adopt?userId=${user.userId}`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       if (!response.ok) {
@@ -52,36 +60,29 @@ const DrainDetail = () => {
     }
   };
 
-  const updateDrain = async (e) => {
-    e.preventDefault();
+  const handleDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete "${drain.name}"?`)) {
+      return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:8080/api/drains/${id}?userId=${currentUserId}`, {
-        method: 'PUT',
+      const token = getToken();
+      const response = await fetch(`http://localhost:8080/api/drains/${id}`, {
+        method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editForm),
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update drain');
+        throw new Error('Failed to delete drain');
       }
 
-      toast.success('Successfully updated the drain!');
-      setIsEditing(false);
-      fetchDrainDetails();
-    } catch (err) {
-      toast.error(err.message);
+      toast.success('Drain deleted successfully');
+      navigate('/');
+    } catch (error) {
+      toast.error(error.message);
     }
-  };
-
-  const startEditing = () => {
-    setEditForm({
-      name: drain.name,
-      imageUrl: drain.imageUrl
-    });
-    setIsEditing(true);
   };
 
   if (loading) return <div>Loading drain details...</div>;
@@ -90,22 +91,30 @@ const DrainDetail = () => {
 
   return (
     <div className="drain-detail">
-      <h2>{drain.name}</h2>
+      <button onClick={() => navigate('/')} className="back-button">
+        ← Back to List
+      </button>
+      <div className="detail-header">
+        <h2>{drain.name}</h2>
+        {isAdmin() && (
+          <div className="admin-actions">
+            <Link to={`/drains/${id}/edit`} className="edit-button">
+              Edit
+            </Link>
+            <button onClick={handleDelete} className="delete-button">
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
       <div className="drain-info">
         <img src={drain.imageUrl} alt={drain.name} className="drain-image" />
         <div className="map-section">
-          <div className="map-container">
-            <iframe
-              width="100%"
-              height="300"
-              frameBorder="0"
-              style={{ border: 0, borderRadius: '8px' }}
-              src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&q=${drain.latitude},${drain.longitude}&zoom=17`}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
+          <LocationViewer 
+            latitude={drain.latitude} 
+            longitude={drain.longitude}
+            name={drain.name}
+          />
           <div className="map-links">
             <a 
               href={`https://www.google.com/maps/search/?api=1&query=${drain.latitude},${drain.longitude}`}
@@ -120,9 +129,6 @@ const DrainDetail = () => {
               />
               Open in Google Maps
             </a>
-            <div className="coordinates">
-              <span>📍 {drain.latitude.toFixed(6)}, {drain.longitude.toFixed(6)}</span>
-            </div>
           </div>
         </div>
         <div className="drain-status">

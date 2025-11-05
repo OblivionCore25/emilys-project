@@ -6,4 +6,6 @@ import lombok.Data;
 public class DrainUpdateDTO {
     private String name;
     private String imageUrl;
+    private Double latitude;
+    private Double longitude;
 }
