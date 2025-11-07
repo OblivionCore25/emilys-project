@@ -8,10 +8,17 @@ import com.example.drainadoption.exception.DrainNotFoundException;
 import com.example.drainadoption.exception.AdoptionConflictException;
 import com.example.drainadoption.model.Drain;
 import com.example.drainadoption.model.User;
+import com.example.drainadoption.model.Comment;
+import com.example.drainadoption.model.Notification;
+import com.example.drainadoption.model.Notification.NotificationType;
 import com.example.drainadoption.repository.DrainRepository;
 import com.example.drainadoption.repository.UserRepository;
+import com.example.drainadoption.repository.CommentRepository;
+import com.example.drainadoption.repository.NotificationRepository;
 import com.example.drainadoption.dto.DrainDTO;
 import com.example.drainadoption.dto.DrainUpdateDTO;
+import com.example.drainadoption.dto.CommentRequest;
+import com.example.drainadoption.dto.CommentDTO;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +31,12 @@ public class DrainController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @GetMapping
     public ResponseEntity<List<DrainDTO>> getAllDrains() {
@@ -79,8 +92,15 @@ public class DrainController {
 
         // 4. Check if drain already adopted by someone else
         if (drain.getAdoptedByUser() != null) {
-            throw new AdoptionConflictException("Drain is already adopted by user with ID: " + 
-                drain.getAdoptedByUser().getId());
+            // Check if the adopting user still exists
+            Long adopterId = drain.getAdoptedByUser().getId();
+            if (!userRepository.existsById(adopterId)) {
+                // Orphaned relationship - clean it up
+                drain.setAdoptedByUser(null);
+                drainRepository.save(drain);
+            } else {
+                throw new AdoptionConflictException("Drain is already adopted by user with ID: " + adopterId);
+            }
         }
 
         // 5. Set relationships both ways
@@ -90,6 +110,14 @@ public class DrainController {
         // 6. Save both entities
         userRepository.save(user);
         drainRepository.save(drain);
+
+        // 7. Create notification for admins
+        Notification notification = new Notification();
+        notification.setType(NotificationType.DRAIN_ADOPTED);
+        notification.setMessage(user.getName() + " adopted drain: " + drain.getName());
+        notification.setDrainId(drain.getId());
+        notification.setUserId(user.getId());
+        notificationRepository.save(notification);
 
         return ResponseEntity.ok()
                 .body(DrainDTO.fromEntity(drain));
@@ -119,5 +147,129 @@ public class DrainController {
 
         Drain updatedDrain = drainRepository.save(drain);
         return ResponseEntity.ok(DrainDTO.fromEntity(updatedDrain));
+    }
+
+    // Comment endpoints
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<CommentDTO> addComment(
+            @PathVariable Long id,
+            @RequestParam Long userId,
+            @RequestBody CommentRequest commentRequest) {
+        
+        // Verify drain exists
+        Drain drain = drainRepository.findById(id)
+                .orElseThrow(() -> new DrainNotFoundException(id));
+
+        // Verify user exists
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        // Check if drain is adopted
+        if (drain.getAdoptedByUser() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Only the adopter of this drain can comment
+        if (!drain.getAdoptedByUser().getId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Create comment
+        Comment comment = new Comment();
+        comment.setDrainId(id);
+        comment.setUserId(userId);
+        comment.setText(commentRequest.getText());
+        comment.setImageUrl(commentRequest.getImageUrl());
+        
+        Comment savedComment = commentRepository.save(comment);
+
+        // Create notification for admins
+        Notification notification = new Notification();
+        notification.setType(NotificationType.COMMENT_ADDED);
+        notification.setMessage(user.getName() + " commented on drain: " + drain.getName());
+        notification.setDrainId(drain.getId());
+        notification.setUserId(user.getId());
+        notificationRepository.save(notification);
+
+        // Convert to DTO
+        CommentDTO dto = new CommentDTO(
+            savedComment.getId(),
+            savedComment.getDrainId(),
+            savedComment.getUserId(),
+            user.getName(),
+            savedComment.getText(),
+            savedComment.getImageUrl(),
+            savedComment.getCreatedAt()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+    }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<CommentDTO>> getComments(@PathVariable Long id) {
+        // Verify drain exists
+        if (!drainRepository.existsById(id)) {
+            throw new DrainNotFoundException(id);
+        }
+
+        List<CommentDTO> comments = commentRepository.findByDrainIdOrderByCreatedAtDesc(id)
+                .stream()
+                .map(comment -> {
+                    User user = userRepository.findById(comment.getUserId()).orElse(null);
+                    return new CommentDTO(
+                        comment.getId(),
+                        comment.getDrainId(),
+                        comment.getUserId(),
+                        user != null ? user.getName() : "Unknown User",
+                        comment.getText(),
+                        comment.getImageUrl(),
+                        comment.getCreatedAt()
+                    );
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(comments);
+    }
+
+    @DeleteMapping("/{drainId}/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable Long drainId,
+            @PathVariable Long commentId) {
+        
+        // Verify drain exists
+        if (!drainRepository.existsById(drainId)) {
+            throw new DrainNotFoundException(drainId);
+        }
+
+        // Verify comment exists and belongs to this drain
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found with ID: " + commentId));
+
+        if (!comment.getDrainId().equals(drainId)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        commentRepository.deleteById(commentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Admin endpoint to reset drain adoption (fix orphaned relationships)
+    @PostMapping("/{id}/reset-adoption")
+    public ResponseEntity<?> resetDrainAdoption(@PathVariable Long id) {
+        Drain drain = drainRepository.findById(id)
+                .orElseThrow(() -> new DrainNotFoundException(id));
+
+        // If drain has an adopter, clear the relationship from both sides
+        if (drain.getAdoptedByUser() != null) {
+            User adopter = drain.getAdoptedByUser();
+            adopter.setAdoptedDrain(null);
+            userRepository.save(adopter);
+            
+            drain.setAdoptedByUser(null);
+            drainRepository.save(drain);
+        }
+
+        return ResponseEntity.ok()
+                .body(java.util.Map.of("message", "Drain adoption reset successfully"));
     }
 }

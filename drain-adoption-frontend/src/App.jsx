@@ -8,11 +8,41 @@ import DrainDetail from './components/DrainDetail';
 import DrainForm from './components/DrainForm';
 import Login from './components/Login';
 import Register from './components/Register';
+import Notifications from './components/Notifications';
 import './components/DrainStyles.css';
 
 function Navigation() {
-  const { user, logout } = useAuth();
+  const { user, logout, getToken, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  React.useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!isAdmin()) return;
+      
+      try {
+        const token = getToken();
+        const response = await fetch('http://localhost:8080/api/notifications/unread-count', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUnreadCount(data.count);
+        }
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    if (user && isAdmin()) {
+      fetchUnreadCount();
+      // Poll every 30 seconds for new notifications
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user, isAdmin, getToken]);
 
   const handleLogout = () => {
     logout();
@@ -28,6 +58,14 @@ function Navigation() {
         <nav className="header-nav">
           {user ? (
             <>
+              {isAdmin() && (
+                <Link to="/notifications" className="notification-bell">
+                  🔔
+                  {unreadCount > 0 && (
+                    <span className="notification-badge">{unreadCount}</span>
+                  )}
+                </Link>
+              )}
               <span className="user-info">
                 {user.name} ({user.role})
               </span>
@@ -92,6 +130,7 @@ function App() {
               <Route path="/drains/:id" element={<DrainDetail />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/notifications" element={<Notifications />} />
             </Routes>
           </main>
           <ToastContainer position="top-right" autoClose={3000} />

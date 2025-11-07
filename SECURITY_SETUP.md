@@ -131,6 +131,149 @@ Frontend will start on: http://localhost:3000
 
 ---
 
+## Creating Admin Users
+
+**IMPORTANT:** The public registration endpoint only creates ADOPTER users. Admin users must be created through secure methods.
+
+### Method 1: Create First Admin (Initial Setup)
+
+⚠️ **Use this immediately after deployment when no admin users exist**
+
+**Using curl:**
+```bash
+curl -X POST http://localhost:8080/api/admin/create-first-admin \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "password": "secure_password_here"
+  }'
+```
+
+**Using Postman:**
+1. Method: `POST`
+2. URL: `http://localhost:8080/api/admin/create-first-admin`
+3. Headers: `Content-Type: application/json`
+4. Body (raw JSON):
+```json
+{
+  "name": "Admin User",
+  "email": "admin@example.com",
+  "password": "secure_password_here"
+}
+```
+
+**Security Notes:**
+- This endpoint only works when **no admin users exist** in the database
+- Once an admin exists, this endpoint returns a 403 Forbidden error
+- Use a strong password for the first admin
+- After creating the first admin, use Method 2 or 3 for additional admins
+
+### Method 2: Promote Existing User (Requires Admin Authentication)
+
+Once you have an admin user, you can promote existing adopter users to admin:
+
+**Steps:**
+1. User registers normally (becomes ADOPTER)
+2. Admin logs in and gets JWT token
+3. Admin calls promotion endpoint
+
+**Using curl:**
+```bash
+curl -X PUT http://localhost:8080/api/admin/promote/{userId} \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+**Using Postman:**
+1. Method: `PUT`
+2. URL: `http://localhost:8080/api/admin/promote/123` (replace 123 with user ID)
+3. Headers: `Authorization: Bearer YOUR_JWT_TOKEN_HERE`
+
+**To get the JWT token:**
+- Login as admin through `/api/auth/login`
+- Copy the `token` from the response
+- Use it in the Authorization header
+
+### Method 3: Direct Database Insert (Emergency/Development Only)
+
+If you need to create an admin directly in the database:
+
+**PostgreSQL:**
+```sql
+-- Generate password hash (use BCrypt online tool or backend encoder)
+-- Example: BCrypt hash of "admin123" with cost 10
+
+INSERT INTO users (name, email, password, role) 
+VALUES (
+  'Emergency Admin',
+  'emergency@example.com',
+  '$2a$10$your_bcrypt_hashed_password_here',
+  'ADMIN'
+);
+```
+
+**⚠️ Use this method only for:**
+- Emergency recovery situations
+- Development/testing environments
+- When Method 1 and 2 are not available
+
+**Generate BCrypt hash:**
+- Online: https://bcrypt-generator.com/ (cost factor 10)
+- Or use backend code to generate the hash
+
+### Security Best Practices for Admin Creation
+
+✅ **DO:**
+- Create the first admin immediately after deployment
+- Use strong, unique passwords for admin accounts
+- Document who has admin access
+- Limit the number of admin users
+- Consider disabling the `/create-first-admin` endpoint after initial setup
+- Use Method 2 (promotion) for routine admin creation
+
+❌ **DON'T:**
+- Leave the application without an admin user
+- Share admin credentials
+- Use weak or default passwords
+- Grant admin access unnecessarily
+- Use Method 3 in production environments
+
+### Verifying Admin Access
+
+After creating an admin user:
+
+1. **Login:**
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "your_password"
+  }'
+```
+
+2. **Check the response:**
+```json
+{
+  "token": "eyJhbGc...",
+  "userId": 1,
+  "email": "admin@example.com",
+  "name": "Admin User",
+  "role": "ADMIN"  // ← Should be "ADMIN"
+}
+```
+
+3. **Test admin privileges:**
+```bash
+# Try creating a drain (admin-only operation)
+curl -X POST http://localhost:8080/api/drains \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{...drain data...}'
+```
+
+---
+
 ## Team Setup
 
 When a new team member joins:

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import LocationViewer from './LocationViewer';
+import CommentSection from './CommentSection';
 import 'react-toastify/dist/ReactToastify.css';
 
 const DrainDetail = () => {
@@ -143,6 +144,13 @@ const DrainDetail = () => {
           </button>
         )}
       </div>
+
+      {/* Comment Section - visible for adopted drains */}
+      <CommentSection 
+        drainId={id}
+        isAdopted={!!drain.adoptedByUserId}
+        isAdopter={user && drain.adoptedByUserId === user.userId}
+      />
     </div>
   );
 };

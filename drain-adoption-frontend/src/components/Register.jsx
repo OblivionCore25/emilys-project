@@ -8,7 +8,6 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('ADOPTER');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -18,7 +17,8 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register(name, email, password, role);
+      // All public registrations default to ADOPTER role
+      await register(name, email, password, 'ADOPTER');
       toast.success('Registration successful!');
       navigate('/');
     } catch (error) {
@@ -66,17 +66,6 @@ const Register = () => {
               minLength="6"
               placeholder="Enter your password (min 6 characters)"
             />
-          </div>
-          <div className="form-group">
-            <label htmlFor="role">Role</label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              <option value="ADOPTER">Adopter</option>
-              <option value="ADMIN">Admin</option>
-            </select>
           </div>
           <button type="submit" className="auth-button" disabled={loading}>
             {loading ? 'Registering...' : 'Register'}

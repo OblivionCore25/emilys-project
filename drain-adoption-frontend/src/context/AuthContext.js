@@ -95,6 +95,10 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem('token');
   };
 
+  const getUserId = () => {
+    return user?.userId;
+  };
+
   const isAdmin = () => {
     return user?.role === 'ADMIN';
   };
@@ -110,6 +114,7 @@ export const AuthProvider = ({ children }) => {
       register, 
       logout, 
       getToken, 
+      getUserId,
       isAdmin, 
       isAdopter, 
       loading 

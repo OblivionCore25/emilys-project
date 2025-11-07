@@ -42,12 +42,9 @@ public class AuthController {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         
-        // Set role (default to ADOPTER if not specified)
-        try {
-            user.setRole(UserRole.valueOf(request.getRole().toUpperCase()));
-        } catch (Exception e) {
-            user.setRole(UserRole.ADOPTER);
-        }
+        // Public registration always creates ADOPTER users
+        // Admin users must be created through secure admin endpoints
+        user.setRole(UserRole.ADOPTER);
 
         User savedUser = userRepository.save(user);
 

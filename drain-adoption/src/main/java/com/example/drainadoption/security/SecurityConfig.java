@@ -37,10 +37,20 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/drains", "/api/drains/**").permitAll()
                 
-                // Admin-only endpoints
+                // First admin creation endpoint (public, but only works when no admin exists)
+                .requestMatchers(HttpMethod.POST, "/api/admin/create-first-admin").permitAll()
+                
+                // Admin management endpoints (require ADMIN role)
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // Notification endpoints (admin only)
+                .requestMatchers("/api/notifications/**").hasRole("ADMIN")
+                
+                // Admin-only drain endpoints
                 .requestMatchers(HttpMethod.POST, "/api/drains").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/drains/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/drains/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/drains/*/reset-adoption").hasRole("ADMIN")
                 
                 // Adopter endpoints (both ADMIN and ADOPTER can adopt)
                 .requestMatchers(HttpMethod.POST, "/api/drains/*/adopt").hasAnyRole("ADMIN", "ADOPTER")
