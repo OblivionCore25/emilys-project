@@ -5,7 +5,6 @@
  * - In development: Uses http://localhost:8080
  * - In production: Uses the URL set in REACT_APP_API_URL environment variable
  */
-
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://drain-adoption-backend-env.eba-6fsdd7fz.us-east-1.elasticbeanstalk.com/';
 
 /**
