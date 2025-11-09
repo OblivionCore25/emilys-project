@@ -37,6 +37,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/drains", "/api/drains/**").permitAll()
                 
+                // Actuator endpoints (health check for AWS)
+                .requestMatchers("/actuator/**").permitAll()
+                
                 // First admin creation endpoint (public, but only works when no admin exists)
                 .requestMatchers(HttpMethod.POST, "/api/admin/create-first-admin").permitAll()
                 
