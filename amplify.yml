@@ -3,15 +3,13 @@ frontend:
   phases:
     preBuild:
       commands:
-        - cd drain-adoption-frontend
-        - echo "Installing dependencies..."
-        - npm cache clean --force
-        - npm ci --legacy-peer-deps
+        - cd drain-adoption-frontend && echo "Installing dependencies..."
+        - cd drain-adoption-frontend && npm cache clean --force
+        - cd drain-adoption-frontend && npm ci --legacy-peer-deps
     build:
       commands:
-        - cd drain-adoption-frontend
-        - echo "Building React application..."
-        - npm run build
+        - cd drain-adoption-frontend && echo "Building React application..."
+        - cd drain-adoption-frontend && npm run build
   artifacts:
     baseDirectory: drain-adoption-frontend/build
     files:
