@@ -8,7 +8,9 @@ frontend:
     build:
       commands:
         - echo "Building React application..."
-        - cd drain-adoption-frontend && npm run build
+        - pwd
+        - ls -la
+        - cd $CODEBUILD_SRC_DIR/drain-adoption-frontend && npm run build
   artifacts:
     baseDirectory: drain-adoption-frontend/build
     files:
