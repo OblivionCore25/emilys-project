@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import API_BASE_URL from '../config/api';
 
 const DrainList = () => {
   const [drains, setDrains] = useState([]);
@@ -15,7 +16,7 @@ const DrainList = () => {
 
   const fetchDrains = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/drains');
+      const response = await fetch(`${API_BASE_URL}/api/drains`);
       if (!response.ok) {
         throw new Error('Failed to fetch drains');
       }
@@ -35,7 +36,7 @@ const DrainList = () => {
 
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:8080/api/drains/${drainId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/drains/${drainId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

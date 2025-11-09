@@ -9,6 +9,7 @@ import DrainForm from './components/DrainForm';
 import Login from './components/Login';
 import Register from './components/Register';
 import Notifications from './components/Notifications';
+import API_BASE_URL from './config/api';
 import './components/DrainStyles.css';
 
 function Navigation() {
@@ -22,7 +23,7 @@ function Navigation() {
       
       try {
         const token = getToken();
-        const response = await fetch('http://localhost:8080/api/notifications/unread-count', {
+        const response = await fetch(`${API_BASE_URL}/api/notifications/unread-count`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -93,7 +94,7 @@ function DrainFormWrapper() {
   React.useEffect(() => {
     const fetchDrain = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/drains/${id}`);
+        const response = await fetch(`${API_BASE_URL}/api/drains/${id}`);
         if (!response.ok) throw new Error('Failed to fetch drain');
         const data = await response.json();
         setExistingDrain(data);

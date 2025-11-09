@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import LocationViewer from './LocationViewer';
 import CommentSection from './CommentSection';
+import API_BASE_URL from '../config/api';
 import 'react-toastify/dist/ReactToastify.css';
 
 const DrainDetail = () => {
@@ -16,7 +17,7 @@ const DrainDetail = () => {
 
   const fetchDrainDetails = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/drains/${id}`);
+      const response = await fetch(`${API_BASE_URL}/api/drains/${id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch drain details');
       }
@@ -42,7 +43,7 @@ const DrainDetail = () => {
 
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:8080/api/drains/${id}/adopt?userId=${user.userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/drains/${id}/adopt?userId=${user.userId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -68,7 +69,7 @@ const DrainDetail = () => {
 
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:8080/api/drains/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/drains/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

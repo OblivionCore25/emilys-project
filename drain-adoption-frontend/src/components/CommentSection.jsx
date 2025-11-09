@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import ImageUpload from './ImageUpload';
+import API_BASE_URL from '../config/api';
 import './CommentSection.css';
 
 const CommentSection = ({ drainId, isAdopted, isAdopter }) => {
@@ -17,7 +18,7 @@ const CommentSection = ({ drainId, isAdopted, isAdopter }) => {
 
   const fetchComments = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/drains/${drainId}/comments`);
+      const response = await fetch(`${API_BASE_URL}/api/drains/${drainId}/comments`);
       if (response.ok) {
         const data = await response.json();
         setComments(data);
@@ -41,7 +42,7 @@ const CommentSection = ({ drainId, isAdopted, isAdopter }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/drains/${drainId}/comments?userId=${userId}`,
+        `${API_BASE_URL}/api/drains/${drainId}/comments?userId=${userId}`,
         {
           method: 'POST',
           headers: {
@@ -81,7 +82,7 @@ const CommentSection = ({ drainId, isAdopted, isAdopter }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/drains/${drainId}/comments/${commentId}`,
+        `${API_BASE_URL}/api/drains/${drainId}/comments/${commentId}`,
         {
           method: 'DELETE',
           headers: {

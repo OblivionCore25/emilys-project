@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import API_BASE_URL from '../config/api';
 import './Notifications.css';
 
 const Notifications = () => {
@@ -21,7 +22,7 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     const token = getToken();
     try {
-      const response = await fetch('http://localhost:8080/api/notifications', {
+      const response = await fetch(`${API_BASE_URL}/api/notifications`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -45,7 +46,7 @@ const Notifications = () => {
     const token = getToken();
     try {
       const response = await fetch(
-        `http://localhost:8080/api/notifications/${notificationId}/read`,
+        `${API_BASE_URL}/api/notifications/${notificationId}/read`,
         {
           method: 'PUT',
           headers: {
@@ -69,7 +70,7 @@ const Notifications = () => {
     const token = getToken();
     try {
       const response = await fetch(
-        'http://localhost:8080/api/notifications/mark-all-read',
+        `${API_BASE_URL}/api/notifications/mark-all-read`,
         {
           method: 'PUT',
           headers: {

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import ImageUpload from './ImageUpload';
 import LocationPicker from './LocationPicker';
+import API_BASE_URL from '../config/api';
 import './DrainStyles.css';
 
 const DrainForm = ({ drainId, existingDrain, onSuccess }) => {
@@ -55,8 +56,8 @@ const DrainForm = ({ drainId, existingDrain, onSuccess }) => {
     try {
       const token = getToken();
       const url = drainId 
-        ? `http://localhost:8080/api/drains/${drainId}`
-        : 'http://localhost:8080/api/drains';
+        ? `${API_BASE_URL}/api/drains/${drainId}`
+        : `${API_BASE_URL}/api/drains`;
       
       const method = drainId ? 'PUT' : 'POST';
 
