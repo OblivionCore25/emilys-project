@@ -3,19 +3,21 @@ frontend:
   phases:
     preBuild:
       commands:
+        - cd drain-adoption-frontend
         - echo "Installing dependencies..."
         - npm ci
     build:
       commands:
+        - cd drain-adoption-frontend
         - echo "Building React application..."
         - npm run build
   artifacts:
-    baseDirectory: build
+    baseDirectory: drain-adoption-frontend/build
     files:
       - '**/*'
   cache:
     paths:
-      - node_modules/**/*
+      - drain-adoption-frontend/node_modules/**/*
   customHeaders:
     - pattern: '**/*'
       headers:
