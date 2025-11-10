@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
+import drainArtImage from '../assets/images/drain-art.jpg';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ const Home = () => {
           <div className="about-content">
             <div className="about-image">
               <img 
-                src="/images/drain-art.jpg" 
+                src={drainArtImage}
                 alt="Colorful koi fish painted on storm drain with 'Only Rain Down the Drain' message"
                 className="featured-image"
               />
