@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Home.css';
 import drainArtImage from '../assets/images/drain-art.jpg';
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <div className="home-container">
@@ -16,20 +18,32 @@ const Home = () => {
             <p className="hero-subtitle">
               Join your community in keeping our waterways clean, one storm drain at a time
             </p>
-            <div className="hero-buttons">
-              <button 
-                className="btn btn-primary" 
-                onClick={() => navigate('/register')}
-              >
-                Get Started
-              </button>
-              <button 
-                className="btn btn-secondary" 
-                onClick={() => navigate('/login')}
-              >
-                Sign In
-              </button>
-            </div>
+            {!user && (
+              <div className="hero-buttons">
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => navigate('/register')}
+                >
+                  Get Started
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => navigate('/login')}
+                >
+                  Sign In
+                </button>
+              </div>
+            )}
+            {user && (
+              <div className="hero-buttons">
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => navigate('/drains')}
+                >
+                  View Available Drains
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -170,20 +184,38 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="cta-section">
-        <div className="container">
-          <h2 className="cta-title">Ready to Make a Difference?</h2>
-          <p className="cta-description">
-            Join hundreds of volunteers in keeping our community clean and safe
-          </p>
-          <button 
-            className="btn btn-cta" 
-            onClick={() => navigate('/register')}
-          >
-            Start Your Adoption Journey
-          </button>
-        </div>
-      </section>
+      {!user && (
+        <section className="cta-section">
+          <div className="container">
+            <h2 className="cta-title">Ready to Make a Difference?</h2>
+            <p className="cta-description">
+              Join hundreds of volunteers in keeping our community clean and safe
+            </p>
+            <button 
+              className="btn btn-cta" 
+              onClick={() => navigate('/register')}
+            >
+              Start Your Adoption Journey
+            </button>
+          </div>
+        </section>
+      )}
+      {user && (
+        <section className="cta-section">
+          <div className="container">
+            <h2 className="cta-title">Continue Making a Difference!</h2>
+            <p className="cta-description">
+              Welcome back, {user.name}! Check out available drains in your area
+            </p>
+            <button 
+              className="btn btn-cta" 
+              onClick={() => navigate('/drains')}
+            >
+              Browse Available Drains
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="home-footer">
