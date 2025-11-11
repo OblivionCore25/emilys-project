@@ -497,3 +497,11 @@
   border-radius: 4px;
   margin-top: 20px;
 }
+
+.drain-status.adopted-by-you {
+  background-color: #d4edda;
+  color: #155724;
+  font-weight: 600;
+  border: 2px solid #28a745;
+  padding: 14px;
+}

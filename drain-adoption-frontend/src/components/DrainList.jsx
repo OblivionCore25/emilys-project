@@ -8,7 +8,7 @@ const DrainList = () => {
   const [drains, setDrains] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isAdmin, getToken } = useAuth();
+  const { isAdmin, getToken, user } = useAuth();
 
   useEffect(() => {
     fetchDrains();
@@ -76,8 +76,14 @@ const DrainList = () => {
               className="drain-image"
             />
             <h3>{drain.name}</h3>
-            <p>
-              Status: {drain.adoptedByUserId ? 'Adopted' : 'Available'}
+            <p className={`drain-status ${drain.adoptedByUserId && user && drain.adoptedByUserId === user.id ? 'adopted-by-you' : ''}`}>
+              Status: {
+                drain.adoptedByUserId 
+                  ? (user && drain.adoptedByUserId === user.id 
+                      ? '✅ Adopted by You' 
+                      : '🔒 Adopted')
+                  : '🆓 Available'
+              }
             </p>
             <div className="card-actions">
               <Link to={`/drains/${drain.id}`} className="view-button">
