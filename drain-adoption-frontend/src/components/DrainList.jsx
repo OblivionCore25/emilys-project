@@ -8,7 +8,7 @@ const DrainList = () => {
   const [drains, setDrains] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isAdmin, getToken, user } = useAuth();
+  const { isAdmin, getToken, user, getUserId } = useAuth();
 
   useEffect(() => {
     fetchDrains();
@@ -76,10 +76,10 @@ const DrainList = () => {
               className="drain-image"
             />
             <h3>{drain.name}</h3>
-            <p className={`drain-status ${drain.adoptedByUserId && user && drain.adoptedByUserId === user.id ? 'adopted-by-you' : ''}`}>
+            <p className={`drain-status ${drain.adoptedByUserId && user && drain.adoptedByUserId === user.userId ? 'adopted-by-you' : ''}`}>
               Status: {
                 drain.adoptedByUserId 
-                  ? (user && drain.adoptedByUserId === user.id 
+                  ? (user && drain.adoptedByUserId === user.userId 
                       ? '✅ Adopted by You' 
                       : '🔒 Adopted')
                   : '🆓 Available'

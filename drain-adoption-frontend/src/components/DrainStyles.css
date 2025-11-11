@@ -505,3 +505,36 @@
   border: 2px solid #28a745;
   padding: 14px;
 }
+
+.already-adopted-message {
+  background-color: #fff3cd;
+  border: 2px solid #ffc107;
+  color: #856404;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.already-adopted-message p {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.already-adopted-message strong {
+  color: #664d03;
+}
+
+.your-drain-message {
+  background-color: #d4edda;
+  border: 2px solid #28a745;
+  color: #155724;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  font-weight: 600;
+}
+
+.your-drain-message p {
+  margin: 0;
+  line-height: 1.6;
+}

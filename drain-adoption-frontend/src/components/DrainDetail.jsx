@@ -11,6 +11,8 @@ const DrainDetail = () => {
   const [drain, setDrain] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userHasAdoptedDrain, setUserHasAdoptedDrain] = useState(false);
+  const [adoptedDrainName, setAdoptedDrainName] = useState('');
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, getToken, isAdmin } = useAuth();
@@ -30,9 +32,33 @@ const DrainDetail = () => {
     }
   }, [id]);
 
+  // Check if user has already adopted a drain
+  const checkUserAdoptedDrain = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/drains`);
+      if (response.ok) {
+        const allDrains = await response.json();
+        const userAdoptedDrain = allDrains.find(d => d.adoptedByUserId === user.userId);
+        
+        if (userAdoptedDrain && userAdoptedDrain.id !== parseInt(id)) {
+          setUserHasAdoptedDrain(true);
+          setAdoptedDrainName(userAdoptedDrain.name);
+        } else {
+          setUserHasAdoptedDrain(false);
+          setAdoptedDrainName('');
+        }
+      }
+    } catch (err) {
+      console.error('Error checking adopted drains:', err);
+    }
+  }, [user, id]);
+
   useEffect(() => {
     fetchDrainDetails();
-  }, [fetchDrainDetails]);
+    checkUserAdoptedDrain();
+  }, [fetchDrainDetails, checkUserAdoptedDrain]);
 
   const adoptDrain = async () => {
     if (!user) {
@@ -134,15 +160,34 @@ const DrainDetail = () => {
           </div>
         </div>
         <div className="drain-status">
-          <p>Status: {drain.adoptedByUserId ? 'Adopted' : 'Available'}</p>
+          <p>
+            Status: {
+              drain.adoptedByUserId 
+                ? (user && drain.adoptedByUserId === user.userId 
+                    ? '✅ Adopted by You' 
+                    : '🔒 Adopted')
+                : '🆓 Available'
+            }
+          </p>
         </div>
-        {!drain.adoptedByUserId && (
+        {!drain.adoptedByUserId && !userHasAdoptedDrain && (
           <button 
             onClick={adoptDrain}
             className="adopt-button"
           >
             Adopt this Drain
           </button>
+        )}
+        {!drain.adoptedByUserId && userHasAdoptedDrain && (
+          <div className="already-adopted-message">
+            <p>⚠️ You have already adopted a drain: <strong>{adoptedDrainName}</strong></p>
+            <p>Each user can only adopt one drain at a time.</p>
+          </div>
+        )}
+        {drain.adoptedByUserId && user && drain.adoptedByUserId === user.userId && (
+          <div className="your-drain-message">
+            <p>✅ This is your adopted drain! Keep up the great work maintaining it.</p>
+          </div>
         )}
       </div>
 
