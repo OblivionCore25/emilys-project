@@ -1,31 +1,18 @@
 version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - cd drain-adoption-frontend
-        - echo "Installing dependencies..."
-        - npm ci
-    build:
-      commands:
-        - cd drain-adoption-frontend
-        - echo "Building React application..."
-        - npm run build
-  artifacts:
-    baseDirectory: drain-adoption-frontend/build
-    files:
-      - '**/*'
-  cache:
-    paths:
-      - drain-adoption-frontend/node_modules/**/*
-  customHeaders:
-    - pattern: '**/*'
-      headers:
-        - key: 'Strict-Transport-Security'
-          value: 'max-age=31536000; includeSubDomains'
-        - key: 'X-Content-Type-Options'
-          value: 'nosniff'
-        - key: 'X-Frame-Options'
-          value: 'DENY'
-        - key: 'X-XSS-Protection'
-          value: '1; mode=block'
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci --legacy-peer-deps
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: build
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+    appRoot: drain-adoption-frontend
