@@ -67,9 +67,23 @@ public class DrainController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDrain(@PathVariable Long id) {
-        if (!drainRepository.existsById(id)) {
-            throw new DrainNotFoundException(id);
+        Drain drain = drainRepository.findById(id)
+                .orElseThrow(() -> new DrainNotFoundException(id));
+        
+        // 1. Delete all comments associated with this drain
+        commentRepository.deleteByDrainId(id);
+        
+        // 2. Delete all notifications associated with this drain
+        notificationRepository.deleteByDrainId(id);
+        
+        // 3. Clear the adoption relationship if drain is adopted
+        if (drain.getAdoptedByUser() != null) {
+            User adopter = drain.getAdoptedByUser();
+            adopter.setAdoptedDrain(null);
+            userRepository.save(adopter);
         }
+        
+        // 4. Now safe to delete the drain
         drainRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
